@@ -9,7 +9,6 @@ import torch
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
-import matplotlib.pyplot as plt
 
 
 def self_attention(Q: torch.Tensor, K: torch.Tensor, V: torch.Tensor, attn_mask: torch.Tensor = None):
@@ -17,7 +16,7 @@ def self_attention(Q: torch.Tensor, K: torch.Tensor, V: torch.Tensor, attn_mask:
     Q.shape: (B, QS, E/H)
     K.shape: (B, KS, E/H)
     V.shape: (B, KS, E/H)
-    attn_mask.shape: (QS, KS)
+    attn_mask.shape: (B*H, QS, KS)
 
     returns: (B, QS, E/H)
 
@@ -50,6 +49,7 @@ class MultiHeadAttention(nn.Module):
         """
         x.shape: (B, QS, E)
         xa.shape: (B, KS, E)
+        attn_mask: (B, QS, KS)
 
         returns: (B, QS, E)
 
@@ -75,6 +75,9 @@ class MultiHeadAttention(nn.Module):
         Q = Q.view(B, QS, self.n_heads, self.d_head).permute(0, 2, 1, 3).reshape(B*self.n_heads, QS, self.d_head)
         K = K.view(B, KS, self.n_heads, self.d_head).permute(0, 2, 1, 3).reshape(B*self.n_heads, KS, self.d_head)
         V = V.view(B, KS, self.n_heads, self.d_head).permute(0, 2, 1, 3).reshape(B*self.n_heads, KS, self.d_head)
+
+        attn_mask = attn_mask.unsqueeze(1).expand(B, self.n_heads, QS, KS).reshape(B*self.n_heads, QS, KS)
+        # attn_mask.shape: (B*H, QS, KS)
 
         output = self_attention(Q, K, V, attn_mask=attn_mask)
         # output.shape: (B*H, QS, E/H)
@@ -200,12 +203,18 @@ class Transformer(nn.Module):
         if not tgt_mask: tgt_mask = torch.zeros(tgt.size(1), tgt.size(1), device=src.device)
         if not memory_mask: memory_mask = torch.zeros(tgt.size(1), src.size(1), device=tgt.device)
 
-
         src_pad_mask = torch.zeros(B, S, device=src.device).masked_fill(src == self.pad_idx, -np.inf)
         tgt_pad_mask = torch.zeros(B, T, device=tgt.device).masked_fill(tgt == self.pad_idx, -np.inf)
 
-        # TODO: Merge the src_pad_mask and tgt_pad_mask with src_mask and tgt_mask respectively
-        tgt_mask += self.generate_tgt_mask(tgt.size(1))
+        src_mask = src_mask        + src_pad_mask.unsqueeze(2) + src_pad_mask.unsqueeze(1)
+        tgt_mask = tgt_mask        + tgt_pad_mask.unsqueeze(2) + tgt_pad_mask.unsqueeze(1)
+        memory_mask = memory_mask  + tgt_pad_mask.unsqueeze(2) + src_pad_mask.unsqueeze(1)
+
+        # src_mask.shape: (B, S, S)
+        # tgt_mask.shape: (B, T, T)
+        # memory_mask.shape: (B, T, S)
+
+        tgt_mask += self.generate_tgt_mask(tgt.size(1)).to(tgt.device)
 
         # Adding positional embeddings to src and tgt
         src = (self.src_embeddings(src) * (self.d_model ** 0.5)) + self.positional_embeddings[:src.size(1)]
