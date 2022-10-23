@@ -69,10 +69,6 @@ class MultiHeadAttention(nn.Module):
         K: torch.Tensor = self.WK(x if xa is None else xa)
         V: torch.Tensor = self.WV(x if xa is None else xa)
 
-        assert Q.size(0) == K.size(0) == V.size(0), "Batchsize should be same"
-        assert K.size(1) == V.size(1), "Seqlen of K and V should be same"
-        assert Q.size(2) == K.size(2) == V.size(2) == self.d_model, "embed_dims should be same for Q,K,V and be equal to self.d_model"
-
         Q = Q.view(B, QS, self.n_heads, self.d_head).permute(0, 2, 1, 3).reshape(B*self.n_heads, QS, self.d_head)
         K = K.view(B, KS, self.n_heads, self.d_head).permute(0, 2, 1, 3).reshape(B*self.n_heads, KS, self.d_head)
         V = V.view(B, KS, self.n_heads, self.d_head).permute(0, 2, 1, 3).reshape(B*self.n_heads, KS, self.d_head)
