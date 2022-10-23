@@ -8,6 +8,7 @@ import math
 import torch
 import numpy as np
 import torch.nn as nn
+from typing import Iterable
 import torch.nn.functional as F
 
 
@@ -87,8 +88,8 @@ class MultiHeadAttention(nn.Module):
         return output
 
 
-class EncoderLayer(nn.Module):
-    def __init__(self, d_model:int, n_heads:int, dim_feedforward:int) -> None:
+class Encoder(nn.Module):
+    def __init__(self, d_model:int, n_heads:int, dim_feedforward:int, dropout_p:float) -> None:
         super().__init__()
         
         self.self_attn = MultiHeadAttention(d_model, n_heads)
@@ -101,6 +102,8 @@ class EncoderLayer(nn.Module):
         )
         self.norm2 = nn.LayerNorm(d_model)
 
+        self.dropout = nn.Dropout(dropout_p)
+
     def forward(self, src: torch.Tensor, src_mask: torch.Tensor):
         """
         src.shape      : (B, QS, E)
@@ -109,15 +112,15 @@ class EncoderLayer(nn.Module):
         returns: (B, QS, E)
         """
 
-        src = self.norm1(src + self.self_attn(src, attn_mask=src_mask))
+        src = self.norm1(src + self.dropout(self.self_attn(src, attn_mask=src_mask)))
 
-        src = self.norm2(src + self.feedforward(src))
+        src = self.norm2(src + self.dropout(self.feedforward(src)))
 
         return src
 
 
-class DecoderLayer(nn.Module):
-    def __init__(self, d_model:int, n_heads:int, dim_feedforward:int) -> None:
+class Decoder(nn.Module):
+    def __init__(self, d_model:int, n_heads:int, dim_feedforward:int, dropout_p:float) -> None:
         super().__init__()
         
         self.self_attn1 = MultiHeadAttention(d_model, n_heads)
@@ -133,6 +136,8 @@ class DecoderLayer(nn.Module):
         )
         self.norm3 = nn.LayerNorm(d_model)
 
+        self.dropout = nn.Dropout(dropout_p)
+
     def forward(self, tgt: torch.Tensor,  memory: torch.Tensor, tgt_mask: torch.Tensor, memory_mask: torch.Tensor):
         """
         tgt.shape         : (B, QS, E)
@@ -143,18 +148,18 @@ class DecoderLayer(nn.Module):
         returns: (B, QS, E)
         """
 
-        tgt = self.norm1(tgt + self.self_attn1(tgt, attn_mask=tgt_mask))
+        tgt = self.norm1(tgt + self.dropout(self.self_attn1(tgt, attn_mask=tgt_mask)))
 
-        tgt = self.norm2(tgt + self.self_attn2(tgt, memory, attn_mask=memory_mask))
+        tgt = self.norm2(tgt + self.dropout(self.self_attn2(tgt, memory, attn_mask=memory_mask)))
 
-        tgt = self.norm3(tgt + self.feedforward(tgt))
+        tgt = self.norm3(tgt + self.dropout(self.feedforward(tgt)))
 
         return tgt
 
 
 
 class Transformer(nn.Module):
-    def __init__(self, d_model:int, n_heads:int, dim_feedforward:int, n_layers:int, src_vocab_size:int, tgt_vocab_size:int, pad_idx:int=0) -> None:
+    def __init__(self, d_model:int, n_heads:int, dim_feedforward:int, n_layers:int, src_vocab_size:int, tgt_vocab_size:int, dropout_p:float=0.1, pad_idx:int=0) -> None:
         super().__init__()
 
         self.d_model = d_model
@@ -164,9 +169,9 @@ class Transformer(nn.Module):
         self.tgt_embeddings = nn.Embedding(tgt_vocab_size, d_model)
         self.positional_embeddings = nn.Parameter(self.generate_sinusoids(4_000, d_model))
 
-        self.encoder = nn.ModuleList([EncoderLayer(d_model, n_heads, dim_feedforward) for _ in range(n_layers)])
+        self.encoder: Iterable[Encoder] = nn.ModuleList([Encoder(d_model, n_heads, dim_feedforward, dropout_p) for _ in range(n_layers)])
         
-        self.decoder = nn.ModuleList([DecoderLayer(d_model, n_heads, dim_feedforward) for _ in range(n_layers)])
+        self.decoder: Iterable[Decoder] = nn.ModuleList([Decoder(d_model, n_heads, dim_feedforward, dropout_p) for _ in range(n_layers)])
 
     @staticmethod
     def generate_sinusoids(length, channels, max_timescale=10000):
