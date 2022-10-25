@@ -40,6 +40,11 @@ def tokenize_data(src_path:str, src_vocab_path:str, tgt_path: str, tgt_vocab_pat
             output_file.write(f"{src_tokens}\t{tgt_tokens}\n")
 
 class Dataset(data.Dataset):
+    """
+    Use Like:
+    dataset = Dataset('en', 'fr', processed_path='.data/processed.txt')
+    dataloader = data.DataLoader(dataset, batch_size=B, pin_memory=True, collate_fn=Dataset.collate_fn)
+    """
     def __init__(self, src_name:str, tgt_name:str, processed_path:str) -> None:
         super().__init__()
 
