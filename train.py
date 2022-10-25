@@ -4,6 +4,7 @@ Written by KrishPro @ KP
 filename: `train.py`
 """
 
+import os
 from typing import List
 from tqdm import tqdm
 import torch.nn as nn
@@ -25,7 +26,7 @@ def train_step(i:int, src: torch.Tensor, tgt: torch.Tensor, model: Transformer, 
 
         out: torch.Tensor = model(src.to(device), tgt[:, :-1])
 
-        loss: torch.Tensor = criterion(out.reshape(-1, hparams['dims']['tgt_vocab_size']), tgt[:, 1:].reshape(-1))
+        loss: torch.Tensor = criterion(out.view(-1, hparams['dims']['tgt_vocab_size']), tgt[:, 1:].view(-1))
 
         scaler.scale(loss).backward()
 
@@ -70,7 +71,7 @@ def train(**kwargs):
 
     criterion = nn.CrossEntropyLoss(ignore_index=0, label_smoothing=hparams['label_smoothing'])
 
-    optimizer = optim.Adam(model.parameters(), lr=hparams['lr_factor'])
+    optimizer = optim.Adam(model.parameters(), lr=hparams['lr_factor'], betas=(0.9, 0.98), eps=1e-9)
     
     lr_lambda = lambda step_num: (hparams['dims']['d_model'] ** -0.5) * min((step_num+1)**-0.5, (step_num+1)*(hparams['warmup_steps']**-1.5))
     lr_scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
@@ -78,7 +79,7 @@ def train(**kwargs):
     scaler = torch.cuda.amp.GradScaler()
 
     dataset = Dataset(hparams['src'], hparams['tgt'], processed_path=hparams['data_path'])
-    dataloader = data.DataLoader(dataset, batch_size=hparams['batch_size'], pin_memory=torch.cuda.is_available(), collate_fn=Dataset.collate_fn)
+    dataloader = data.DataLoader(dataset, batch_size=hparams['batch_size'], num_workers=os.cpu_count(), pin_memory=torch.cuda.is_available(), collate_fn=Dataset.collate_fn)
 
     if hparams['overfit_one_batch']:
         src, tgt = next(iter(dataloader))
