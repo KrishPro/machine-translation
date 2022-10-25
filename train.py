@@ -4,6 +4,7 @@ Written by KrishPro @ KP
 filename: `train.py`
 """
 
+from typing import List
 from tqdm import tqdm
 import torch.nn as nn
 import torch.optim as optim
@@ -87,6 +88,8 @@ def train(**kwargs):
 
                 pbar.set_postfix(loss=loss.detach())
 
+    loss_history = []
+
     for epoch in range(hparams['epochs']):
 
         with tqdm(dataloader, desc=f"EPOCH {epoch}") as pbar:
@@ -95,6 +98,10 @@ def train(**kwargs):
                 loss = train_step(i, src, tgt, model, criterion, optimizer, hparams, device, scaler, lr_scheduler).detach()
 
                 pbar.set_postfix(loss=loss.detach())
+                loss_history.append(loss.detach())
 
+        loss_history: List[float] = list(map(lambda t: t.item(), loss_history))
+
+        torch.save({'loss_history': loss_history, "state_dict": model.state_dict(), "dims": hparams['dims'], 'hparams': hparams}, f"out-epoch={epoch}-loss={loss_history[-1]}.pkl")
 if __name__ == "__main__":
     train()
