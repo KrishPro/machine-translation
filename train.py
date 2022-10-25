@@ -66,7 +66,7 @@ def train(**kwargs):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    model = nn.DataParallel(Transformer(**hparams['dims'], pad_idx=-1).to(device)) if hparams['use_all_gpus'] else Transformer(**hparams['dims'], pad_idx=-1).to(device)
+    model = nn.DataParallel(Transformer(**hparams['dims']).to(device)) if hparams['use_all_gpus'] else Transformer(**hparams['dims']).to(device)
 
     criterion = nn.CrossEntropyLoss(ignore_index=0, label_smoothing=hparams['label_smoothing'])
 
