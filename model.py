@@ -26,7 +26,7 @@ def self_attention(Q: torch.Tensor, K: torch.Tensor, V: torch.Tensor, attn_mask:
 
     attn_mask = attn_mask if attn_mask is not None else torch.zeros(Q.size(1), K.size(1), device=Q.device)
     
-    return torch.bmm(F.softmax(torch.baddbmm(attn_mask, Q, K.transpose(-2, -1))/math.sqrt(K.size(-1)), dim=-1), V)
+    return torch.bmm(torch.nan_to_num(F.softmax(torch.baddbmm(attn_mask, Q, K.transpose(-2, -1))/math.sqrt(K.size(-1)), dim=-1)), V)
 
 
 class MultiHeadAttention(nn.Module):
