@@ -73,7 +73,7 @@ class MultiHeadAttention(nn.Module):
         K = K.view(B, KS, self.n_heads, self.d_head).permute(0, 2, 1, 3).reshape(B*self.n_heads, KS, self.d_head)
         V = V.view(B, KS, self.n_heads, self.d_head).permute(0, 2, 1, 3).reshape(B*self.n_heads, KS, self.d_head)
 
-        attn_mask = attn_mask.unsqueeze(1).expand(B, self.n_heads, QS, KS).reshape(B*self.n_heads, QS, KS)
+        attn_mask = attn_mask.repeat_interleave(self.n_heads, dim=0)
         # attn_mask.shape: (B*H, QS, KS)
 
         output = self_attention(Q, K, V, attn_mask=attn_mask)
@@ -161,6 +161,7 @@ class Transformer(nn.Module):
         self.d_model = d_model
         self.pad_idx = pad_idx
 
+        self.dropout = nn.Dropout(dropout_p)
         self.src_embeddings = nn.Embedding(src_vocab_size, d_model)
         self.tgt_embeddings = nn.Embedding(tgt_vocab_size, d_model)
         self.positional_embeddings = nn.Parameter(self.generate_sinusoids(4_000, d_model))
@@ -180,8 +181,8 @@ class Transformer(nn.Module):
 
 
     @staticmethod
-    def generate_tgt_mask(T:int):
-        return torch.empty(T, T).fill_(-np.inf).triu_(1)
+    def generate_tgt_mask(T:int, device: torch.device = None):
+        return torch.empty(T, T, device=device).fill_(-np.inf).triu_(1)
 
     def forward(self, src: torch.Tensor, tgt: torch.Tensor, src_mask: torch.Tensor = None, tgt_mask: torch.Tensor = None, memory_mask: torch.Tensor = None):
         """
@@ -215,11 +216,11 @@ class Transformer(nn.Module):
         # tgt_mask.shape: (B, T, T)
         # memory_mask.shape: (B, T, S)
 
-        tgt_mask += self.generate_tgt_mask(tgt.size(1)).to(tgt.device)
+        tgt_mask += self.generate_tgt_mask(tgt.size(1), device=tgt.device)
 
         # Adding positional embeddings to src and tgt
-        src = (self.src_embeddings(src) * (self.d_model ** 0.5)) + self.positional_embeddings[:src.size(1)]
-        tgt = (self.tgt_embeddings(tgt) * (self.d_model ** 0.5)) + self.positional_embeddings[:tgt.size(1)]
+        src = self.dropout((self.src_embeddings(src) * (self.d_model ** 0.5)) + self.positional_embeddings[:src.size(1)])
+        tgt = self.dropout((self.tgt_embeddings(tgt) * (self.d_model ** 0.5)) + self.positional_embeddings[:tgt.size(1)])
 
         for layer in self.encoder:
             src: torch.Tensor = layer(src, src_mask=src_mask)
