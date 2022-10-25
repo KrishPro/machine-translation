@@ -170,6 +170,11 @@ class Transformer(nn.Module):
         
         self.decoder: Iterable[Decoder] = nn.ModuleList([Decoder(d_model, n_heads, dim_feedforward, dropout_p) for _ in range(n_layers)])
 
+        self.out = nn.Sequential(
+            nn.Linear(self.d_model, tgt_vocab_size),
+            nn.Softmax(-1)
+        )
+
     @staticmethod
     def generate_sinusoids(length, channels, max_timescale=10000):
         """Returns sinusoids for positional embedding"""
@@ -192,6 +197,8 @@ class Transformer(nn.Module):
         src_mask.shape: (S, S)
         tgt_mask.shape: (T, T)
         memory_mask.shape: (T, S)
+
+        returns: (B, T, TV)
         """
 
         assert src.device == tgt.device, "Both SRC & TGT should be on the same device"
@@ -228,4 +235,5 @@ class Transformer(nn.Module):
         for layer in self.decoder:
             tgt: torch.Tensor = layer(tgt, src, tgt_mask=tgt_mask, memory_mask=memory_mask)
 
-        return tgt
+        output: torch.Tensor = self.out(tgt)
+        return output
