@@ -41,30 +41,31 @@ def train(**kwargs):
 
     hparams = {
         'dims':  {
-            'd_model': 64,
-            'n_heads': 1,
-            'dim_feedforward': 256,
-            'n_layers': 1,
+            'd_model': 128,
+            'n_heads': 2,
+            'dim_feedforward': 512,
+            'n_layers': 3,
             'src_vocab_size': 30_000,
             'tgt_vocab_size': 30_000
         },
         'data_path': '.data/processed.txt',
-        'accumulation_batch_size': 2,
+        'accumulation_batch_size': 64,
         'batch_size': 1,
         'label_smoothing': 0.0, 
-        'lr_factor': 1,
+        'lr_factor': 100,
         'epochs': 10,
         'src': 'en',
         'tgt': 'fr',
         'overfit_one_batch': True,
-        'warmup_steps': 4_000
+        'warmup_steps': 4_000,
+        'use_all_gpus': True
     }
 
     hparams.update(kwargs)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    model = nn.DataParallel(Transformer(**hparams['dims'], pad_idx=-1).to(device))
+    model = nn.DataParallel(Transformer(**hparams['dims'], pad_idx=-1).to(device)) if hparams['use_all_gpus'] else Transformer(**hparams['dims'], pad_idx=-1).to(device)
 
     criterion = nn.CrossEntropyLoss(ignore_index=0, label_smoothing=hparams['label_smoothing'])
 
@@ -84,7 +85,7 @@ def train(**kwargs):
             for i in pbar:
                 loss = train_step(i, src, tgt, model, criterion, optimizer, hparams, device, scaler, lr_scheduler).detach()
 
-                pbar.set_postfix(loss=loss.item(), lr=optimizer.param_groups[0]['lr'])
+                pbar.set_postfix(loss=loss.detach())
 
     for epoch in range(hparams['epochs']):
 
@@ -93,7 +94,7 @@ def train(**kwargs):
             for i, (src, tgt) in enumerate(pbar):
                 loss = train_step(i, src, tgt, model, criterion, optimizer, hparams, device, scaler, lr_scheduler).detach()
 
-                pbar.set_postfix(loss=loss.item())
+                pbar.set_postfix(loss=loss.detach())
 
 if __name__ == "__main__":
     train()
