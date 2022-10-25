@@ -60,7 +60,8 @@ def train(**kwargs):
         'tgt': 'fr',
         'overfit_one_batch': True,
         'warmup_steps': 4_000,
-        'use_all_gpus': True
+        'use_all_gpus': True,
+        'print_loss': False
     }
 
     hparams.update(kwargs)
@@ -100,6 +101,9 @@ def train(**kwargs):
 
                 pbar.set_postfix(loss=loss.detach())
                 loss_history.append(loss.detach())
+
+                if hparams['print_logs']:
+                    print(loss.item())
 
         loss_history: List[float] = list(map(lambda t: t.item(), loss_history))
 
