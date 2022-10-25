@@ -43,7 +43,7 @@ def train(**kwargs):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    model = Transformer(**hparams['dims'], pad_idx=-1).to(device)
+    model = nn.DataParallel(Transformer(**hparams['dims'], pad_idx=-1).to(device))
 
     criterion = nn.CrossEntropyLoss(ignore_index=0, label_smoothing=hparams['label_smoothing'])
 
