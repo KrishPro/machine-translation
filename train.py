@@ -71,4 +71,5 @@ def train(**kwargs):
 
                 pbar.set_postfix(loss=loss.item())
 
-train()
+if __name__ == "__main__":
+    train()
