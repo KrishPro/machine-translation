@@ -26,7 +26,7 @@ def train_step(i:int, src: torch.Tensor, tgt: torch.Tensor, model: Transformer, 
 
         out: torch.Tensor = model(src.to(device), tgt[:, :-1])
 
-        loss: torch.Tensor = criterion(out.view(-1, hparams['dims']['tgt_vocab_size']), tgt[:, 1:].view(-1))
+        loss: torch.Tensor = criterion(out.reshape(-1, hparams['dims']['tgt_vocab_size']), tgt[:, 1:].reshape(-1))
 
         scaler.scale(loss).backward()
 
