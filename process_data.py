@@ -4,10 +4,13 @@ Written by KrishPro @ KP
 filename: `process_data.py`
 """
 
+import os
+from tokenizers import Tokenizer
 from tqdm import tqdm
 from typing import List, Tuple
 from unidecode import unidecode
 import re
+from vocab import create_vocab
 
 class CleanText:
     html_cleaner = re.compile('<.*?>') 
@@ -33,6 +36,7 @@ class CleanText:
         text: str = cls.remove_urls(text)
         text: str = unidecode(text)
         text: str = text if cls.filter_text(text) else ''
+        text: str = text.replace("\n", " ")
         return text
 
 def count_lines(input_path:str):
@@ -42,7 +46,7 @@ def count_lines(input_path:str):
             num_sentences += 1
     return num_sentences
 
-def load_data(src_input_path:str, tgt_input_path:str):
+def load_raw_data(src_input_path:str, tgt_input_path:str):
     # Getting the number of sentences
     src_num_sentences, tgt_num_sentences =  count_lines(src_input_path), count_lines(tgt_input_path)
     assert src_num_sentences == tgt_num_sentences, "Both files should have same number of sentences"
@@ -55,8 +59,8 @@ def load_data(src_input_path:str, tgt_input_path:str):
                 yield src, tgt
 
 
-def main(src_path: str, tgt_path: str, src_out_path: str, tgt_out_path: str):
-    data: List[Tuple[str, str]] = list(load_data(src_path, tgt_path))
+def process_raw_data(src_path: str, tgt_path: str, src_out_path: str, tgt_out_path: str):
+    data: List[Tuple[str, str]] = list(load_raw_data(src_path, tgt_path))
 
     print("Dumping sentences...")
     src, tgt = zip(*data)
@@ -67,6 +71,42 @@ def main(src_path: str, tgt_path: str, src_out_path: str, tgt_out_path: str):
     with open(tgt_out_path, 'w') as tgt_out_file:
         tgt_out_file.write('\n'.join(tgt))
 
+def load_data(src_input_path: str, tgt_input_path: str):
+    src_num_sentences, tgt_num_sentences =  count_lines(src_input_path), count_lines(tgt_input_path)
+    assert src_num_sentences == tgt_num_sentences, "Both files should have same number of sentences"
+    num_sentences = src_num_sentences
+
+    with open(src_input_path) as src_input_file, open(tgt_input_path) as tgt_input_file:
+        for src, tgt in tqdm(zip(src_input_file, tgt_input_file), total=num_sentences, desc="Loading and tokenizing sentences"):
+            yield src, tgt
+
+def process_data(src_input_path: str, tgt_input_path: str, src_vocab_path: str, tgt_vocab_path: str, output_path: str):
+    data: List[Tuple[str, str]] = list(load_data(src_input_path, tgt_input_path))
+
+    src_tokenizer: Tokenizer = Tokenizer.from_file(src_vocab_path)
+    tgt_tokenizer: Tokenizer = Tokenizer.from_file(tgt_vocab_path)
+
+    print("Dumping sentences...")
+    src, tgt = zip(*data)
+
+    src_tokens: List[List[int]] = [encoding.ids for encoding in src_tokenizer.encode_batch(src)]
+    tgt_tokens: List[List[int]] = [encoding.ids for encoding in tgt_tokenizer.encode_batch(tgt)]
+
+
+    with open(output_path, 'w') as output_file:
+        for src_ids, tgt_ids in zip(src_tokens, tgt_tokens):
+            output_file.write(f"{' '.join(map(str, src_ids))}\t{' '.join(map(str, tgt_ids))}\n")
+
+
 
 if __name__ == '__main__':
-    main('.data/raw/train.tags.fr-en.en', '.data/raw/train.tags.fr-en.fr', '.data/sentences.en', '.data/sentences.fr')
+    process_raw_data('.data/raw/train.tags.fr-en.en', '.data/raw/train.tags.fr-en.fr', '.data/sentences.en', '.data/sentences.fr')
+    print()
+
+    print("Creating vocabs")
+    if not os.path.exists('.data/vocabs'): os.makedirs('.data/vocabs')
+    create_vocab(['.data/sentences.en'], '.data/vocabs/vocab.en')
+    create_vocab(['.data/sentences.fr'], '.data/vocabs/vocab.fr')
+    print()
+
+    process_data('.data/sentences.en', '.data/sentences.fr', '.data/vocabs/vocab.en', '.data/vocabs/vocab.fr', '.data/processed.txt')
