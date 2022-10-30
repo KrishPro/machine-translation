@@ -5,8 +5,10 @@ filename: `data.py`
 """
 
 
+from typing import List, Tuple
 import torch.utils.data as data
 from process_data import count_lines
+import torch
 
 class Dataset(data.Dataset):
     def __init__(self, processed_path: str, chunk_size:int = 2**18) -> None:
@@ -57,3 +59,12 @@ class Dataset(data.Dataset):
 
     def __len__(self):
         return self.len
+
+    @staticmethod
+    def collate_fn(data: List[Tuple[List[int], List[int]]]):
+        src, tgt = zip(*data)
+
+        src = [s + ([0.] * (max(map(len, src)) - len(s))) for s in src]
+        tgt = [t + ([0.] * (max(map(len, tgt)) - len(t))) for t in tgt]
+
+        return torch.tensor(src), torch.tensor(tgt)
