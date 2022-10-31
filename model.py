@@ -4,7 +4,6 @@ Written by KrishPro @ KP
 filename: `model.py`
 """
 
-from unicodedata import name
 import torch
 import numpy as np
 import torch.nn as nn
@@ -23,7 +22,7 @@ def self_attention(Q: torch.Tensor, K: torch.Tensor, V: torch.Tensor, attn_mask:
     B, QS, E = Q.shape
     B, KS, E = K.shape
 
-    if attn_mask is None: attn_mask = torch.zeros(B, QS, KS)
+    if attn_mask is None: attn_mask = torch.zeros(B, QS, KS, device=Q.device)
 
     energy = torch.nan_to_num(F.softmax(torch.baddbmm(attn_mask, Q, K.transpose(-2, -1)) / (E ** 0.5), dim=2))
     # energy.shape: (B, QS, KS)
@@ -69,7 +68,7 @@ class MultiHeadAttention(nn.Module):
         K = K.view(B, SS, self.n_heads, self.d_heads).transpose(1, 2).reshape(B*self.n_heads, SS, self.d_heads)
         V = V.view(B, SS, self.n_heads, self.d_heads).transpose(1, 2).reshape(B*self.n_heads, SS, self.d_heads)
 
-        attn_mask = attn_mask.repeat_interleave(self.n_heads, dim=0)
+        attn_mask = attn_mask.repeat_interleave(self.n_heads, dim=0) if (attn_mask is not None) and attn_mask.dim() == 3 else attn_mask
         # attn_mask = (B*H, S, SS)
 
         out = self_attention(Q, K, V, attn_mask=attn_mask).reshape(B, self.n_heads, S, self.d_heads).transpose(1, 2).reshape(B, S, self.n_heads*self.d_heads)
@@ -155,10 +154,11 @@ class Transformer(nn.Module):
 
         self.max_len = 5_000
         self.pad_idx = pad_idx
-        self.src_embedding = nn.Embedding(src_vocab_size, d_model)
-        self.tgt_embedding = nn.Embedding(tgt_vocab_size, d_model)
+        self.mask_token = -1e+25 # Usually `float('-inf')`, But i used -1e+25 for numerical stablity
+        self.src_embedding = nn.Embedding(src_vocab_size, d_model, padding_idx=self.pad_idx)
+        self.tgt_embedding = nn.Embedding(tgt_vocab_size, d_model, padding_idx=self.pad_idx)
         self.pos_embedding = PositionalEmbedding(d_model, dropout_p, max_len=self.max_len)
-        self.register_buffer('lm_mask', torch.empty(self.max_len, self.max_len).fill_(float('-inf')).triu_(1), persistent=False)
+        self.register_buffer('lm_mask', torch.empty(self.max_len, self.max_len).fill_(self.mask_token).triu_(1), persistent=False)
 
         self.encoder_layers = nn.ModuleList([Encoder(d_model, n_heads, dim_feedforward, dropout_p) for _ in range(num_layers)])
         
@@ -183,8 +183,8 @@ class Transformer(nn.Module):
         """
 
         # Generating masks
-        src_mask = torch.zeros(*src.shape, device=src.device).masked_fill(src == self.pad_idx, float('-inf'))
-        tgt_mask = torch.zeros(*tgt.shape, device=tgt.device).masked_fill(tgt == self.pad_idx, float('-inf'))
+        src_mask = torch.zeros(*src.shape, device=src.device).masked_fill(src == self.pad_idx, self.mask_token)
+        tgt_mask = torch.zeros(*tgt.shape, device=tgt.device).masked_fill(tgt == self.pad_idx, self.mask_token)
         
         memory_mask = src_mask.unsqueeze(1) + tgt_mask.unsqueeze(2)
         src_mask = src_mask.unsqueeze(1) + src_mask.unsqueeze(2)
