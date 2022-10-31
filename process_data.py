@@ -9,6 +9,7 @@ from tokenizers import Tokenizer
 from tqdm import tqdm
 from typing import List, Tuple
 from unidecode import unidecode
+import pandas as pd
 import re
 from vocab import create_vocab
 
@@ -92,10 +93,9 @@ def process_data(src_input_path: str, tgt_input_path: str, src_vocab_path: str, 
     src_tokens: List[List[int]] = [encoding.ids for encoding in src_tokenizer.encode_batch(src)]
     tgt_tokens: List[List[int]] = [encoding.ids for encoding in tgt_tokenizer.encode_batch(tgt)]
 
+    dataframe = pd.DataFrame({'src': src_tokens, 'tgt': tgt_tokens})
 
-    with open(output_path, 'w') as output_file:
-        for src_ids, tgt_ids in zip(src_tokens, tgt_tokens):
-            output_file.write(f"{' '.join(map(str, src_ids))}\t{' '.join(map(str, tgt_ids))}\n")
+    dataframe.to_feather(output_path)
 
 
 
@@ -109,4 +109,4 @@ if __name__ == '__main__':
     create_vocab(['.data/sentences.fr'], '.data/vocabs/vocab.fr')
     print()
 
-    process_data('.data/sentences.en', '.data/sentences.fr', '.data/vocabs/vocab.en', '.data/vocabs/vocab.fr', '.data/processed.txt')
+    process_data('.data/sentences.en', '.data/sentences.fr', '.data/vocabs/vocab.en', '.data/vocabs/vocab.fr', '.data/processed.dt')
