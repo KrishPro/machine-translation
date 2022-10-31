@@ -51,7 +51,7 @@ hparams = {
     "learning_rate": 1e-3,
     "batch_size": 4,
     "accumulative_batch_size": 4,
-    "overfit_one_batch": {"epochs": 1_000},
+    "overfit_one_batch": {"epochs": 1_000, "batch_size": 4},
     "epochs": 10,
     "log_interval": 50,
     "test_ratio": 0.1,
@@ -77,8 +77,8 @@ def train(hparams = hparams, device = torch.device("cuda" if torch.cuda.is_avail
         print("Overfitting single batch")
         src, tgt = next(iter(train_dataloader))
 
-        src: torch.Tensor = src.to(device).long()
-        tgt: torch.Tensor = tgt.to(device).long()
+        src: torch.Tensor = src.to(device).long()[:hparams['overfit_one_batch']['batch_size']]
+        tgt: torch.Tensor = tgt.to(device).long()[:hparams['overfit_one_batch']['batch_size']]
 
         prev_frame_time = 0
         total_epochs = hparams['overfit_one_batch']['epochs']
