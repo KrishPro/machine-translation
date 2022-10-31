@@ -62,7 +62,7 @@ hparams = {
 def train(hparams = hparams, device = torch.device("cuda" if torch.cuda.is_available() else "cpu")):
     model = nn.DataParallel(Transformer(**hparams['dims'], dropout_p=hparams['dropout']).to(device))
 
-    optimizer = optim.Adam(model.parameters(), lr=hparams['learning_rate'])
+    optimizer = optim.Adam(model.parameters(), lr=hparams['learning_rate'], betas=(0.9, 0.98), eps=1e-9)
     criterion = nn.CrossEntropyLoss(ignore_index=0)
 
     dataset = Dataset(hparams['data_path'])
