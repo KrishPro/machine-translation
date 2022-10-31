@@ -5,9 +5,13 @@ filename: `train.py`
 """
 
 import os
-from datetime import timedelta
-from model import Transformer
-from data import Dataset
+try:
+    from model import Transformer
+    from data import Dataset
+except:
+    from machine_translation.model import Transformer
+    from machine_translation.data import Dataset
+
 
 import torch.utils.data as data
 import torch.optim as optim
