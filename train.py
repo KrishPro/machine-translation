@@ -171,5 +171,5 @@ def train(hparams = hparams, device = torch.device("cuda" if torch.cuda.is_avail
         print(log)
 
 
-
-train()
+if __name__ == '__main__':
+    train()
