@@ -56,7 +56,8 @@ hparams = {
     "log_interval": 50,
     "test_ratio": 0.1,
     "ckpt_dir": '.ignore',
-    "dropout": 0.1
+    "dropout": 0.1,
+    "smooth_logs": True
 }
 
 def train(hparams = hparams, device = torch.device("cuda" if torch.cuda.is_available() else "cpu")):
@@ -99,7 +100,7 @@ def train(hparams = hparams, device = torch.device("cuda" if torch.cuda.is_avail
 
             log = f"{i:05d}/{total_epochs} | ({i/total_epochs*100:.3f}%) | [{fps:.3f}it/s] | eta: {int(hh):02d}:{int(mm):02d}:{int(ss):02d} | Loss: {loss:.5f}"
 
-            if i != 0: print(log, end='\r')
+            if i != 0: print(log, end='\r' if hparams['smooth_logs'] else '\n')
         print(log)
         print("\n")
         
@@ -130,7 +131,7 @@ def train(hparams = hparams, device = torch.device("cuda" if torch.cuda.is_avail
 
                 log = f"epoch {epoch:02d}/{hparams['epochs']} | {i:06d}/{total_datapoints} | ({i/total_datapoints*100:.3f}%) | [{fps:.3f}it/s] | eta: {int(hh):02d}:{int(mm):02d}:{int(ss):02d} | Loss: {loss:.5f}"
 
-                if i % hparams['log_interval'] == 0 and i != 0: print(log, end='\r')
+                if i % hparams['log_interval'] == 0 and i != 0: print(log, end='\r' if hparams['smooth_logs'] else '\n')
 
             train_i = i
             
@@ -160,7 +161,7 @@ def train(hparams = hparams, device = torch.device("cuda" if torch.cuda.is_avail
 
                     log = f"[VAL] epoch {epoch:02d}/{hparams['epochs']} | {i:06d}/{total_datapoints} | ({i/total_datapoints*100:.3f}%) | [{fps:.3f}it/s] | eta: {int(hh):02d}:{int(mm):02d}:{int(ss):02d} | Loss: {loss:.5f}"
 
-                    if i % hparams['log_interval'] == 0 and i != 0: print(log, end='\r')
+                    if i % hparams['log_interval'] == 0 and i != 0: print(log, end='\r' if hparams['smooth_logs'] else '\n')
                 model.train()
             print(log)
             torch.save({'state_dict': model.state_dict(), 'hparams': hparams, 'dims': hparams['dims']}, os.path.join(hparams['ckpt_dir'], f"epoch={epoch}-loss={loss:.3f}.ckpt"))
