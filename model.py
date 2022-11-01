@@ -174,6 +174,20 @@ class Transformer(nn.Module):
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
 
+    @classmethod
+    def from_ckpt(cls, ckpt_path: str, return_hparams = False):
+        ckpt = torch.load(ckpt_path)
+        
+        model = cls(**ckpt['dims'])
+
+        # this k[7:] does `module.abc` -> abc, idk why but by default model.state_dict() adds 'module.' as a prefix to the keys
+        model.load_state_dict({k[7:]:v for k, v in ckpt['state_dict'].items()})
+
+        if return_hparams:
+            return model, ckpt['hparams']
+
+        return model
+
     def forward(self, src: torch.Tensor, tgt:torch.Tensor):
         """
         src.shape: (B, S)
