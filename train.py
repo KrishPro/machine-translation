@@ -106,7 +106,7 @@ def train(hparams = hparams, device = torch.device("cuda" if torch.cuda.is_avail
         
     print("Starting training")
     prev_frame_time = 0
-    total_datapoints = len(train_dataloader.dataset) + len(test_dataloader.dataset)
+    total_datapoints = (len(train_dataloader.dataset) + len(test_dataloader.dataset)) / hparams["batch_size"]
     try:
         for epoch in range(hparams['epochs']):
             for i, (src, tgt) in enumerate(train_dataloader):
