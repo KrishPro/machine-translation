@@ -57,14 +57,15 @@ hparams = {
     "test_ratio": 0.1,
     "ckpt_dir": '.ignore',
     "dropout": 0.1,
-    "smooth_logs": True
+    "smooth_logs": True,
+    "label_smoothing": 0.1,
 }
 
 def train(hparams = hparams, device = torch.device("cuda" if torch.cuda.is_available() else "cpu")):
     model = nn.DataParallel(Transformer(**hparams['dims'], dropout_p=hparams['dropout']).to(device))
 
     optimizer = optim.Adam(model.parameters(), lr=hparams['learning_rate'], betas=(0.9, 0.98), eps=1e-9)
-    criterion = nn.CrossEntropyLoss(ignore_index=0)
+    criterion = nn.CrossEntropyLoss(ignore_index=0, label_smoothing=hparams['label_smoothing'])
 
     dataset = Dataset(hparams['data_path'])
     test_size = int(len(dataset) * hparams['test_ratio'])
