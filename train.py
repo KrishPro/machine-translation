@@ -108,6 +108,10 @@ def train(hparams = hparams, device = torch.device("cuda" if torch.cuda.is_avail
     print("Starting training")
     prev_frame_time = 0
     total_datapoints = (len(train_dataloader.dataset) + len(test_dataloader.dataset)) / hparams["batch_size"]
+
+    train_loss_history = []
+    test_loss_history = []
+
     try:
         for epoch in range(hparams['epochs']):
             for i, (src, tgt) in enumerate(train_dataloader):
@@ -118,6 +122,7 @@ def train(hparams = hparams, device = torch.device("cuda" if torch.cuda.is_avail
                 optimizer_step = i % hparams['accumulative_batch_size'] == 0
 
                 loss = train_step(model, optimizer, criterion, src, tgt, optimizer_step=optimizer_step)
+                train_loss_history.append(loss)
 
                 # Calculating fps
                 new_frame_time = time.time()
@@ -148,6 +153,7 @@ def train(hparams = hparams, device = torch.device("cuda" if torch.cuda.is_avail
                     optimizer_step = i % hparams['accumulative_batch_size'] == 0
 
                     loss = train_step(model, optimizer, criterion, src, tgt, optimizer_step=optimizer_step, val_step=True)
+                    test_loss_history.append(loss)
 
                     # Calculating fps
                     new_frame_time = time.time()
@@ -165,7 +171,7 @@ def train(hparams = hparams, device = torch.device("cuda" if torch.cuda.is_avail
                     if i % hparams['log_interval'] == 0 and i != 0: print(log, end='\r' if hparams['smooth_logs'] else '\n')
                 model.train()
             print(log)
-            torch.save({'state_dict': model.state_dict(), 'hparams': hparams, 'dims': hparams['dims']}, os.path.join(hparams['ckpt_dir'], f"epoch={epoch}-loss={loss:.3f}.ckpt"))
+            torch.save({'state_dict': model.state_dict(), 'hparams': hparams, 'dims': hparams['dims'], 'history': {'train': train_loss_history, 'test': test_loss_history}}, os.path.join(hparams['ckpt_dir'], f"epoch={epoch}-loss={loss:.3f}.ckpt"))
     except Exception as e:
         print(f"Error: {e}")
 
