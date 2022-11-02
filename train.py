@@ -169,6 +169,8 @@ def train(hparams = hparams, device = torch.device("cuda" if torch.cuda.is_avail
                     log = f"[VAL] epoch {epoch:02d}/{hparams['epochs']} | {i:06d}/{total_datapoints} | ({i/total_datapoints*100:.3f}%) | [{fps:.3f}it/s] | eta: {int(hh):02d}:{int(mm):02d}:{int(ss):02d} | Loss: {loss:.5f}"
 
                     if i % hparams['log_interval'] == 0 and i != 0: print(log, end='\r' if hparams['smooth_logs'] else '\n')
+
+                log = f"[VAL] epoch {epoch:02d}/{hparams['epochs']} | {i:06d}/{total_datapoints} | ({i/total_datapoints*100:.3f}%) | [{fps:.3f}it/s] | eta: {int(hh):02d}:{int(mm):02d}:{int(ss):02d} | Loss: {sum(test_loss_history[-(i-train_i):])/(i-train_i):.5f}"
                 model.train()
             print(log)
             torch.save({'state_dict': model.state_dict(), 'hparams': hparams, 'dims': hparams['dims'], 'history': {'train': train_loss_history, 'test': test_loss_history}}, os.path.join(hparams['ckpt_dir'], f"epoch={epoch}-loss={loss:.3f}.ckpt"))
