@@ -55,14 +55,21 @@ class MultiHeadAttention(nn.Module):
         """
 
         B, S, E = x.shape
-        SS = xa.size(1) if xa is not None else S
 
-        assert (xa is None) or B == xa.size(0), "Batchsize should be same for x and xa"
-        assert ((xa is None) or E == xa.size(2)) and E == self.d_model, "Embed_dims should be same for x and xa and be equal to d_model"
+        assert (xa is None or type(xa) == dict) or B == xa.size(0), "Batchsize should be same for x and xa"
+        assert ((xa is None or type(xa) == dict) or E == xa.size(2)) and E == self.d_model, "Embed_dims should be same for x and xa and be equal to d_model"
 
         Q: torch.Tensor = self.Q(x)
-        K: torch.Tensor = self.K(xa if xa is not None else x)
-        V: torch.Tensor = self.V(xa if xa is not None else x)
+
+        if type(xa) == dict:
+            K: torch.Tensor = xa[self.K]
+            V: torch.Tensor = xa[self.V]
+
+        else:
+            K: torch.Tensor = self.K(xa if xa is not None else x)
+            V: torch.Tensor = self.V(xa if xa is not None else x)
+        
+        SS = K.size(1)
 
         Q = Q.view(B,  S, self.n_heads, self.d_heads).transpose(1, 2).reshape(B*self.n_heads,  S, self.d_heads)
         K = K.view(B, SS, self.n_heads, self.d_heads).transpose(1, 2).reshape(B*self.n_heads, SS, self.d_heads)

@@ -37,7 +37,7 @@ class Translator:
 
         return src
 
-    def decode(self, src: torch.Tensor, tgt: torch.Tensor, attn_mask=None, memory_mask=None):
+    def decode(self, src: torch.Tensor, tgt: torch.Tensor, attn_mask=None, memory_mask=None, process_last_only=True):
         """
         tgt.shape: (B, T, E)
         src.shape: (B, S, E)
@@ -50,7 +50,8 @@ class Translator:
         for layer in self.model.decoder_layers:
             tgt = layer(tgt, src, attn_mask=attn_mask, memory_mask=memory_mask)
 
-        return F.softmax(self.model.output(tgt), dim=-1)
+        if process_last_only: return F.softmax(self.model.output(tgt[:, -1, :]), dim=-1)
+        else: return F.softmax(self.model.output(tgt), dim=-1)
 
 
     @torch.no_grad()
@@ -69,7 +70,7 @@ class Translator:
 
                 tgt_mask = lm_mask[:tgt.size(1), :tgt.size(1)].unsqueeze(0)
 
-                pred: int = self.decode(src_encodings, tgt, tgt_mask)[:, -1, :].argmax(1).item()
+                pred: int = self.decode(src_encodings, tgt, tgt_mask).argmax(1).item()
                 tgt = torch.cat([tgt, torch.tensor(pred, device=self.device).view(1, 1)], dim=1)
 
                 if pred == self.eos_token:
@@ -86,12 +87,16 @@ class Translator:
             tgt: torch.Tensor = torch.tensor([[self.sos_token] for _ in range(beam_width)], device=self.device)
             beams_conf = torch.tensor([1. for i in range(beam_width)], device=self.device)
 
+            # Caching the Key-Values for the src_encodings
+            cache = {}
+            for layer in self.model.decoder_layers:
+                cache[layer.cross_attn.K] = layer.cross_attn.K(src_encodings)
+                cache[layer.cross_attn.V] = layer.cross_attn.V(src_encodings)
+
             for i in range(self.max_len):
-
                 tgt_mask = lm_mask[:tgt.size(1), :tgt.size(1)] 
-
-                out: torch.Tensor = self.decode(src_encodings, tgt, tgt_mask)[:, -1, :]
-      
+                out: torch.Tensor = self.decode(cache, tgt, tgt_mask)
+                
                 possiblities = torch.cat([tgt.repeat_interleave(out.size(1), dim=0), torch.arange(0, out.size(1), device=self.device).repeat(out.size(0)).unsqueeze(1)], dim=1)
 
                 beams_conf, ids = torch.topk(out.reshape(-1) * beams_conf.repeat_interleave(out.size(1)), k=beam_width)
