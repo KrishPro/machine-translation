@@ -65,9 +65,7 @@ class Translator:
         if algorithm == "greedy_decode":
             tgt: torch.Tensor = torch.tensor([[self.sos_token]], device=self.device)
 
-            i = 0
-            while i < self.max_len:
-                i += 1
+            for i in range(self.max_len):
 
                 tgt_mask = lm_mask[:tgt.size(1), :tgt.size(1)].unsqueeze(0)
 
@@ -88,9 +86,7 @@ class Translator:
             tgt: torch.Tensor = torch.tensor([[self.sos_token] for _ in range(beam_width)], device=self.device)
             beams_conf = torch.tensor([1. for i in range(beam_width)], device=self.device)
 
-            i = 0
-            while i < self.max_len:
-                i += 1
+            for i in range(self.max_len):
 
                 tgt_mask = lm_mask[:tgt.size(1), :tgt.size(1)] 
 
