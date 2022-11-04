@@ -122,7 +122,7 @@ translator = Translator('/home/krish/Projects/machine-translation/.ignore/epoch=
 while True:
     english_sentence = input(">> ")
     start = default_timer()
-    for i, (translation, conf) in enumerate(translator.translate(english_sentence, algorithm="beam_search", beam_width=64)):
+    for i, (translation, conf) in enumerate(translator.translate(english_sentence, algorithm="greedy_decode", beam_width=0)):
         print(f"    {i+1}) ({conf*100:}%) {translation}")
         if (i+1) == 10:
             break
