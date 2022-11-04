@@ -12,7 +12,7 @@ import torch
 
 
 class Translator:
-    def __init__(self, ckpt_path: str, src_vocab_path: str, tgt_vocab_path: str, device=torch.device("cuda" if torch.cuda.is_available() else "cpu")) -> None:
+    def __init__(self, ckpt_path: str, src_vocab_path: str, tgt_vocab_path: str, device=None) -> None:
         self.model = Transformer.from_ckpt(ckpt_path).to(device).eval()
   
         self.device = device
@@ -63,6 +63,12 @@ class Translator:
         src_encodings = self.model.pos_embedding(self.model.src_embedding(src))
         src_encodings = self.encode(src_encodings)
 
+        # Caching the Key-Values for the src_encodings
+        cache = {}
+        for layer in self.model.decoder_layers:
+            cache[layer.cross_attn.K] = layer.cross_attn.K(src_encodings)
+            cache[layer.cross_attn.V] = layer.cross_attn.V(src_encodings)
+
         if algorithm == "greedy_decode":
             tgt: torch.Tensor = torch.tensor([[self.sos_token]], device=self.device)
 
@@ -70,7 +76,7 @@ class Translator:
 
                 tgt_mask = lm_mask[:tgt.size(1), :tgt.size(1)].unsqueeze(0)
 
-                pred: int = self.decode(src_encodings, tgt, tgt_mask).argmax(1).item()
+                pred: int = self.decode(cache, tgt, tgt_mask).argmax(1).item()
                 tgt = torch.cat([tgt, torch.tensor(pred, device=self.device).view(1, 1)], dim=1)
 
                 if pred == self.eos_token:
