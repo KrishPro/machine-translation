@@ -87,8 +87,6 @@ class Translator:
         elif algorithm == "beam_search":
             assert beam_width > 0, "beam width should be greater than 0"
 
-            # TODO: Improve the performance by using kv_cache for larger values of beam_width
-
             src_encodings = src_encodings.repeat(beam_width, 1, 1)
             tgt: torch.Tensor = torch.tensor([[self.sos_token] for _ in range(beam_width)], device=self.device)
             beams_conf = torch.tensor([1. for i in range(beam_width)], device=self.device)
