@@ -8,6 +8,7 @@ from typing import List
 from tokenizers import Tokenizer
 import torch.nn.functional as F
 from model import Transformer
+from unidecode import unidecode
 import torch
 
 
@@ -56,6 +57,7 @@ class Translator:
 
     @torch.no_grad()
     def translate(self, src_sentence: str, algorithm="greedy_decode", beam_width=None) -> List[str]:
+        src_sentence = unidecode(src_sentence)
         src = torch.tensor(self.src_vocab.encode(src_sentence).ids, device=self.device).unsqueeze(0)
     
         lm_mask = torch.empty(self.max_len, self.max_len, device=self.device).fill_(self.mask_token).triu_(1)
@@ -115,7 +117,7 @@ class Translator:
 from timeit import default_timer
     
 
-translator = Translator('/home/krish/Projects/machine-translation/.ignore/epoch=19-loss=3.400.ckpt', '.data/vocabs/vocab.en', '.data/vocabs/vocab.fr')
+translator = Translator('<checkpoint/path>', src_vocab_path='vocabs/vocab.en', tgt_vocab_path='vocabs/vocab.fr')
 
 while True:
     english_sentence = input(">> ")
