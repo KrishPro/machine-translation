@@ -59,6 +59,7 @@ hparams = {
     "dropout": 0.1,
     "smooth_logs": True,
     "label_smoothing": 0.1,
+    "reversed": False
 }
 
 def train(hparams = hparams, device = torch.device("cuda" if torch.cuda.is_available() else "cpu")):
@@ -67,7 +68,7 @@ def train(hparams = hparams, device = torch.device("cuda" if torch.cuda.is_avail
     optimizer = optim.Adam(model.parameters(), lr=hparams['learning_rate'], betas=(0.9, 0.98), eps=1e-9)
     criterion = nn.CrossEntropyLoss(ignore_index=0, label_smoothing=hparams['label_smoothing'])
 
-    dataset = Dataset(hparams['data_path'])
+    dataset = Dataset(hparams['data_path'], reversed=hparams['reversed'])
     test_size = int(len(dataset) * hparams['test_ratio'])
 
     train_dataset, test_dataset = data.random_split(dataset, [len(dataset)-test_size, test_size])

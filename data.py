@@ -11,13 +11,17 @@ import pandas as pd
 import torch
 
 class Dataset(data.Dataset):
-    def __init__(self, processed_path: str) -> None:
+    def __init__(self, processed_path: str, reversed=False) -> None:
         super().__init__()
                 
+        self.reversed = reversed
         self.data = pd.read_feather(processed_path)
 
     def __getitem__(self, idx: int):
-        return tuple(self.data.iloc[idx])
+        if self.reversed:
+            return tuple(reversed(self.data.iloc[idx]))
+        else:
+            return tuple(self.data.iloc[idx])
 
     def __len__(self):
         return len(self.data)
