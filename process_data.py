@@ -100,13 +100,13 @@ def process_data(src_input_path: str, tgt_input_path: str, src_vocab_path: str, 
 
 
 if __name__ == '__main__':
-    process_raw_data('.data/raw/train.tags.fr-en.en', '.data/raw/train.tags.fr-en.fr', '.data/sentences.en', '.data/sentences.fr')
+    process_raw_data('.data/raw/train.tags.de-en.en', '.data/raw/train.tags.de-en.de', '.data/sentences.en', '.data/sentences.de')
     print()
 
     print("Creating vocabs")
     if not os.path.exists('.data/vocabs'): os.makedirs('.data/vocabs')
     create_vocab(['.data/sentences.en'], '.data/vocabs/vocab.en')
-    create_vocab(['.data/sentences.fr'], '.data/vocabs/vocab.fr')
+    create_vocab(['.data/sentences.de'], '.data/vocabs/vocab.de')
     print()
 
-    process_data('.data/sentences.en', '.data/sentences.fr', '.data/vocabs/vocab.en', '.data/vocabs/vocab.fr', '.data/processed.dt')
+    process_data('.data/sentences.en', '.data/sentences.de', '.data/vocabs/vocab.en', '.data/vocabs/vocab.de', '.data/processed.dt')
