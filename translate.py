@@ -117,7 +117,7 @@ class Translator:
 from timeit import default_timer
     
 
-translator = Translator('<checkpoint/path>', src_vocab_path='vocabs/vocab.en', tgt_vocab_path='vocabs/vocab.fr')
+translator = Translator('<checkpoint/path>', src_vocab_path='vocabs/vocab.en', tgt_vocab_path='vocabs/vocab.de')
 
 while True:
     english_sentence = input(">> ")
