@@ -1,0 +1,16 @@
+{
+  "name": "machine-translation-demo",
+  "version": "1.0.0",
+  "description": "This is the javascript version of the demo",
+  "main": "translate.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "KrishPro@KP",
+  "license": "ISC",
+  "dependencies": {
+    "onnxruntime-node": "^1.13.1",
+    "readline-sync": "^1.4.10",
+    "unidecode": "^0.1.8"
+  }
+}
