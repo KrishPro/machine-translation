@@ -7,6 +7,8 @@ I know, In this project we suffer from over-fitting. I believe increasing the we
 
 ## English to German
 
+ONNX Models: [here](https://gitlab.com/KrishPro/trained-models/-/tree/main/ONNX/english-to-german)
+
 Kaggle Notebook: [here](https://www.kaggle.com/code/krishbaisoya/machine-translation-en-de)
 
 
@@ -31,6 +33,8 @@ German  : Das ist der zweite Satz . Ich mag Bucher nicht lesen , ich glaube Arti
 ```
 
 ## German to English
+
+ONNX Models: [here](https://gitlab.com/KrishPro/trained-models/-/tree/main/ONNX/german-to-english)
 
 Kaggle Notebook: [here](https://www.kaggle.com/code/krishbaisoya/machine-translation-de-en)
 
