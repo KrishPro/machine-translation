@@ -7,14 +7,16 @@ I know, In this project we suffer from over-fitting. I believe increasing the we
 
 ## English to French
 
+ONNX Models: [here](https://gitlab.com/KrishPro/trained-models/-/tree/main/ONNX/english-to-french)
+
 Kaggle Notebook: [here](https://www.kaggle.com/code/krishbaisoya/machine-translation-en-fr)
 
 
-![](Assets/en-fr/train-loss.png)
+![](Assets/en-fr/train-loss.png)\
 **Train Loss**
 
 
-![](Assets/en-fr/test-loss.png)
+![](Assets/en-fr/test-loss.png)\
 **Test Loss**
 
 ### Results
@@ -32,14 +34,17 @@ French  : Voici la seconde phrase . Je n ' aime pas lire des livres , je crois q
 
 ## French to English
 
+ONNX Models: [here](https://gitlab.com/KrishPro/trained-models/-/tree/main/ONNX/french-to-english)
+
+
 Kaggle Notebook: [here](https://www.kaggle.com/code/krishbaisoya/machine-translation-fr-en)
 
 
-![](Assets/fr-en/train-loss.png)
+![](Assets/fr-en/train-loss.png)\
 **Train Loss**
 
 
-![](Assets/fr-en/test-loss.png)
+![](Assets/fr-en/test-loss.png)\
 **Test Loss**
 
 ### Results
