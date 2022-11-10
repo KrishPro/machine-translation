@@ -47,14 +47,10 @@ Kaggle Notebook: [here](https://www.kaggle.com/code/krishbaisoya/machine-transla
 **Test Loss**
 
 ### Results
-```
-French  : Bonjour, cette phrase est assez longue. Le modèle pourrait avoir du mal à traduire cela. Voyons voir
-
-English : Hello , that sentence is quite long . The model could have trouble translated to translate that . Let ' s see .
-```
 
 ```
 German  : Hallo, dieser Satz ist ziemlich lang. Das Modell könnte Schwierigkeiten haben, dies zu übersetzen Mal schauen
+
 English : Hello , that sentence is quite long . The model could have difficulty turning this out .
 ```
 
