@@ -136,6 +136,8 @@ async function main() {
         pair[1] = "en"
     }
     
+    console.log()
+
     console.log("Loading models...(Usually takes 50 to 60s)")
     let tokenizers = await get_tokenizers(pair)
 
