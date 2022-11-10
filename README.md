@@ -12,11 +12,11 @@ ONNX Models: [here](https://gitlab.com/KrishPro/trained-models/-/tree/main/ONNX/
 Kaggle Notebook: [here](https://www.kaggle.com/code/krishbaisoya/machine-translation-en-de)
 
 
-![](Assets/en-de/train-loss.png)
+![](Assets/en-de/train-loss.png)\
 **Train Loss**
 
 
-![](Assets/en-de/test-loss.png)
+![](Assets/en-de/test-loss.png)\
 **Test Loss**
 
 ### Results
@@ -39,11 +39,11 @@ ONNX Models: [here](https://gitlab.com/KrishPro/trained-models/-/tree/main/ONNX/
 Kaggle Notebook: [here](https://www.kaggle.com/code/krishbaisoya/machine-translation-de-en)
 
 
-![](Assets/de-en/train-loss.png)
+![](Assets/de-en/train-loss.png)\
 **Train Loss**
 
 
-![](Assets/de-en/test-loss.png)
+![](Assets/de-en/test-loss.png)\
 **Test Loss**
 
 ### Results
