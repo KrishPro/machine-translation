@@ -3,7 +3,7 @@ The repo targets creating simple one-to-one machine translation models, clearing
 
 ## Architecture
 
-I've used pure orignal transformer with any modifications, I have just changed the size according to my needs. I have also changed the way it is implimented because the method proposed by the research paper is quite slow. The main concept remains unchanged
+I've used pure orignal transformer without any modifications, I have just changed the size according to my needs. I have also changed the way it is implimented because the method proposed by the research paper is quite slow. The main concept remains unchanged
 
 You can read the [research paper](https://arxiv.org/pdf/1706.03762.pdf) for further details
 
